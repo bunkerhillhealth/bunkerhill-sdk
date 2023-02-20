@@ -31,7 +31,7 @@ that include CUDA drivers on an Ubuntu 22.04 image.
 - Test cases to assess model correctness. We also ask that you transfer test data so Bunkerhill
 can continue to measure correctness throughout deployment. An example of model tests is provided
 for the hippocampus example model at
-[bunkerhill/examples/hippocampus/test_model.py](unkerhill/examples/hippocampus/test_model.py).
+[bunkerhill/examples/hippocampus/test_model.py](bunkerhill/examples/hippocampus/test_model.py).
 - A model class to encapsulate all necessary steps for inference. This class must extend
 [`BaseModel`](bunkerhill/base_model.py) and will also contain the entrypoint to runs your model via a
 `ModelRunner`. An example of a minimal model class is shown below:
