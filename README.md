@@ -26,15 +26,15 @@ You'll need the following components to run model inference on Bunkerhill:
 - A [`requirements.txt`](https://pip.pypa.io/en/stable/reference/requirements-file-format/)
 file to download your model's [PyPI](https://pypi.org/) dependencies
 - A Dockerfile to hermetically build your model with its dependencies in a Docker image. The
-[hippocampus example Dockerfile](bunkerhill/examples/hippocampus/Dockerfile) provides an example
-that include CUDA drivers on an Ubuntu 22.04 image.
+[Dockerfile for the hippocampus model](bunkerhill/examples/hippocampus/Dockerfile) provides an example
+that includes CUDA drivers on an Ubuntu 22.04 image.
 - Test cases to assess model correctness. We also ask that you transfer test data so Bunkerhill
 can continue to measure correctness throughout deployment. An example of model tests is provided
 for the hippocampus example model at
 [bunkerhill/examples/hippocampus/test_model.py](bunkerhill/examples/hippocampus/test_model.py).
 - A model class to encapsulate all necessary steps for inference. This class must extend
-[`BaseModel`](bunkerhill/base_model.py) and will also contain the entrypoint to runs your model via a
-`ModelRunner`. An example of a minimal model class is shown below:
+[`BaseModel`](bunkerhill/base_model.py) and will also contain the entrypoint to runs your model via
+`ModelRunner`. An example of a simple model class is shown below:
 
 ```python
 from typing import Dict
@@ -86,7 +86,7 @@ saves the pickled output to a file
 4. `ModelRunner` sends an [`InferenceResponse`](bunkerhill/proto/inference.proto#L23) back to the
 client
 
-## Example model: hippocampus segmentation
+## Example model: hippocampus segmentation using nnUNet
 
 The [hippocampus segmentation](bunkerhill/examples/hippocampus/model.py) model demonstrates how to
 make an [nnUNet](https://github.com/MIC-DKFZ/nnUNet) model compatible with the Bunkerhill SDK. It
@@ -95,9 +95,12 @@ contains a segmentation model trained on the hippocampus dataset from the
 Inference is performed using the `nnUNet_predict` command line tool, and inputs and outputs are
 converted between NumPy and NifTi formats.
 
-### Build image
+The [nnUNet library](https://github.com/MIC-DKFZ/nnUNet#installation) requires 4 GB of VRAM for
+inference.
 
-To build the example model, run
+### Build Docker image
+
+The model is run as a Docker container. To build the example model, run
 ```shell
 docker build \
   --build-arg USER_ID=$(id -u) \
@@ -132,12 +135,12 @@ docker run -it \
 
 #### Generate inference input
 
-For this example model, the
-[`nifti_to_modelrunner_input.py`](bunkerhill/utils/nifti_to_modelrunner_input.py) utility can be
-run to convert a NifTi image from the Medical Segmentation Decathlon into the necessary input
+To generate input for this model, use the
+[`nifti_to_modelrunner_input.py`](bunkerhill/utils/nifti_to_modelrunner_input.py) utility to
+convert a NifTi image from the Medical Segmentation Decathlon into the expected input
 format.
 
-First, download the hippocampus dataset from the
+First, download the hippocampus dataset (`Task04_Hippocampus.tar`) from the
 [Google Drive](https://drive.google.com/file/d/1RzPB1_bqzQhlWvU-YGvZzhx2omcDh38C/view?usp=share_link)
 hosted by the Medical Segmentation Decathlon.
 
@@ -180,7 +183,7 @@ filesystem path and send an `InferenceResponse` back to the client.
 
 Inputs to your model's `inference()` method can either be specific to the DICOM study or a specific
 series in the study. Inputs specific to a series are passed to `inference()` as a dictionary
-mapping the DICOM series UUID to the input value. Alternatively, inputs specific to a study are
+mapping the DICOM series UUID to the input value, while inputs specific to a study are
 just passed to `inference()` by their value.
 
 ### `PixelArray`
