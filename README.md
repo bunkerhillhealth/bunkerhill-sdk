@@ -37,7 +37,7 @@ for the hippocampus example model at
 `ModelRunner`. An example of a simple model class is shown below:
 
 ```python
-from typing import Dict
+from typing import Dict, List, Union
 
 import numpy as np
 
@@ -54,12 +54,52 @@ class MyModel(BaseModel):
     # This path must be valid within the Docker container.
     self.model = keras.models.load_model('/path/to/weights')
 
-  def inference(self, pixel_array: Dict[SeriesInstanceUID, np.ndarray]) -> Outputs:
+  def inference(
+      self,
+      pixel_array: Dict[SeriesInstanceUID, np.ndarray],
+      chronological_age_months: int,
+      laterality: Dict[SeriesInstanceUID, str],
+      patient_sex: str,
+      photometric_interpretation: Dict[SeriesInstanceUID, str],
+      rescale_intercept: Dict[SeriesInstanceUID, float],
+      rescale_slope: Dict[SeriesInstanceUID, float],
+      slice_thickness: Dict[SeriesInstanceUID, float],
+      window_center: Dict[SeriesInstanceUID, Union[float, List[float]]],
+      window_width: Dict[SeriesInstanceUID, Union[float, List[float]]],
+  ) -> Outputs:
     """Runs inference on an entire DICOM series.
 
     Args:
       pixel_array: A Dict mapping the DICOM series instance UID to the 3D tensor of concatenated
         PixelData data elements.
+      chronological_age_months: The patient's age (at the time of the study acquisition) in number
+        of months.
+      laterality: A Dict mapping the DICOM series instance UID to laterality of the body part
+        examined. Value can be 'L' (left) or 'R' (right). For more information, see:
+        https://dicom.innolitics.com/ciods/video-photographic-image/general-series/00200060
+      patient_sex: Sex of the patient. Value can be 'M' (male), 'F' (female), or 'O' (other). For
+        more information, see:
+        https://dicom.innolitics.com/ciods/video-photographic-image/patient/00100040
+      photometric_interpretation: A Dict mapping the DICOM series instance UID to the intended
+        interpretation of the pixel data. Value can be 'MONOCHROME1' or 'MONOCHROME2'. For more
+        information, see:
+        https://dicom.innolitics.com/ciods/cr-image/cr-image/00280004
+      rescale_intercept: A Dict mapping the DICOM series instance UID to the value b in the
+        relationship between stored values (SV) and the output units: `output units = m*SV+b`
+        For more information, see:
+        https://dicom.innolitics.com/ciods/ct-image/ct-image/00281052
+      rescale_slope: A Dict mapping the DICOM series instance UID to m in the equation:
+        `output units = m*SV+b`. For more information, see:
+        https://dicom.innolitics.com/ciods/ct-image/ct-image/00281053
+      slice_thickness: A Dict mapping the DICOM series instance UID to nominal slice thickness,
+        in mm. For more information, see:
+        https://dicom.innolitics.com/ciods/rt-dose/image-plane/00180050
+      window_center: A Dict mapping the DICOM series instance UID to a Window Center for display.
+        For more information, see:
+        https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281050
+      window_width: A Dict mapping the DICOM series instance UID to a Window Width for display.
+        For more information, see:
+        https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281051
 
     Returns:
       Dict containing the single output value
@@ -204,17 +244,16 @@ In addition to `PixelArray`, other DICOM standard data elements can be used as m
 Models deployed on Bunkerhill can currently include the following DICOM data elements as inputs to
 inference.
 
-- Age ([`PatientBirthDate`](https://dicom.innolitics.com/ciods/cr-image/patient/00100030) at
+- `chronological_age_months` ([`PatientBirthDate`](https://dicom.innolitics.com/ciods/cr-image/patient/00100030) at
 [`StudyDate`](https://dicom.innolitics.com/ciods/cr-image/general-study/00080020))
-- [`Laterality`](https://dicom.innolitics.com/ciods/video-photographic-image/general-series/00200060)
-- [`PatientBirthDate`](https://dicom.innolitics.com/ciods/rt-dose/patient/00100030)
-- [`PatientSex`](https://dicom.innolitics.com/ciods/arterial-pulse-waveform/patient/00100040)
-- [`PhotometricInterpretation`](https://dicom.innolitics.com/ciods/cr-image/cr-image/00280004)
-- [`RescaleIntercept`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281052)
-- [`RescaleSlope`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281053)
-- [`SliceThickness`](https://dicom.innolitics.com/ciods/rt-dose/image-plane/00180050)
-- [`WindowCenter`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281050)
-- [`WindowWidth`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281051)
+- [`laterality`](https://dicom.innolitics.com/ciods/video-photographic-image/general-series/00200060): Value can be 'L' (left) or 'R' (right).
+- [`patient_sex`](https://dicom.innolitics.com/ciods/arterial-pulse-waveform/patient/00100040): Value can be 'M' (male), 'F' (female), or 'O' (other).
+- [`photometric_interpretation`](https://dicom.innolitics.com/ciods/cr-image/cr-image/00280004): Value can be 'MONOCHROME1' or 'MONOCHROME2'.
+- [`rescale_intercept`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281052)
+- [`rescale_slope`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281053)
+- [`slice_thickness`](https://dicom.innolitics.com/ciods/rt-dose/image-plane/00180050)
+- [`window_center`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281050)
+- [`window_width`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281051)
 
 Other inputs can be added to support new models. Please contact us if your model requires other
 inputs for inference.
