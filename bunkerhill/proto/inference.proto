@@ -1,0 +1,23 @@
+// The gRPC service definition for the Inference Processor.
+
+syntax = "proto3";
+
+package bhpy.proto;
+
+// The Inference Processor service definition.
+service InferenceProcessor {
+  // Sends request to the ModelRunner to run inference.
+  rpc RunInference (InferenceRequest) returns (InferenceResponse) {}
+}
+
+// The RunInference request message.
+message InferenceRequest {
+  // Name of directory where inputs and outputs are stored.
+  string data_dirname = 1;
+
+  // The UUID of the study on which to run model inference.
+  string uuid = 2;
+}
+
+// The RunInference response message.
+message InferenceResponse {}
