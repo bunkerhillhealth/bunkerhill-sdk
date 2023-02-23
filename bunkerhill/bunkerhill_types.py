@@ -2,6 +2,6 @@
 
 from typing import Any, Dict
 
-OutputAttributes = Dict[str, Any]
-SeriesUID = str
+Outputs = Dict[str, Any]
+SeriesInstanceUID = str
 Tag = str

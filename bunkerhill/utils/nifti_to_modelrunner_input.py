@@ -47,4 +47,3 @@ if __name__ == '__main__':
     type=str
   )
   main(parser.parse_args())
-

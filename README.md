@@ -7,8 +7,8 @@ their models on the [Bunkerhill Health](https://www.bunkerhillhealth.com/) infer
 
 1. [Overview](#overview)
 2. [Deploying your model](#deploying-your-model)
-3. [ModelRelease](#modelrunner)
-4. [Example model: hippocampus segmentation](#example-model-hippocampus-segmentation)
+3. [ModelRunner](#modelrunner)
+4. [Example model: hippocampus segmentation](#example-model-hippocampus-segmentation-using-nnunet)
 5. [Inputs](#inputs)
 6. [Outputs](#outputs)
 
@@ -43,9 +43,10 @@ import numpy as np
 
 from tensorflow import keras
 
-from bunkerhill.bunkerhill_types import OutputAttributes, SeriesUID
+from bunkerhill.bunkerhill_types import Outputs, SeriesInstanceUID
 from bunkerhill.model import BaseModel
 from bunkerhill.model_runner import ModelRunner
+
 
 class MyModel(BaseModel):
 
@@ -53,12 +54,12 @@ class MyModel(BaseModel):
     # This path must be valid within the Docker container.
     self.model = keras.models.load_model('/path/to/weights')
 
-  def inference(self, pixel_array: Dict[SeriesUID, np.ndarray]) -> OutputAttributes:
+  def inference(self, pixel_array: Dict[SeriesInstanceUID, np.ndarray]) -> Outputs:
     """Runs inference on an entire DICOM series.
 
     Args:
-      pixel_array: A Dict mapping the DICOM series UID to the 3D tensor of concatenated PixelData
-        data elements.
+      pixel_array: A Dict mapping the DICOM series instance UID to the 3D tensor of concatenated
+        PixelData data elements.
 
     Returns:
       Dict containing the single output value
@@ -189,7 +190,7 @@ just passed to `inference()` by their value.
 ### `PixelArray`
 
 DICOM files store their pixel data in the
-[`PixelData`](https://dicom.innolitics.com/ciods/segmentation/image-pixel/7fe00010) attribute.
+[`PixelData`](https://dicom.innolitics.com/ciods/segmentation/image-pixel/7fe00010) data element.
 Bunkerhill accesses this data via the
 [pydicom `PixelArray` API](https://pydicom.github.io/pydicom/dev/old/working_with_pixel_data.html).
 
@@ -198,9 +199,7 @@ single 3D array.
 
 ### Non-`PixelArray` inputs
 
-In addition to `PixelArray`, other DICOM attributes can be used as model inputs. These input
-attributes can be either be defined in the DICOM spec or can be defined as
-[private data elements](https://pydicom.github.io/pydicom/dev/old/private_data_elements.html).
+In addition to `PixelArray`, other DICOM standard data elements can be used as model inputs.
 
 Models deployed on Bunkerhill can currently include the following DICOM data elements as inputs to
 inference.
@@ -217,15 +216,16 @@ inference.
 - [`WindowCenter`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281050)
 - [`WindowWidth`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281051)
 
-Other input attributes can be added to support new models. Please contact us if your model requires
-other input attributes for inference.
+Other inputs can be added to support new models. Please contact us if your model requires other
+inputs for inference.
 
-## Output attributes
+## Outputs
 
-`inference()` can return any type(s) of output attributes. Examples include:
+`inference()` returns a `Dict[str, Any]`, where each key-value pair represents a single output.
+The key is a unique name for the output, and the value is the corresponding value of the output.
+Examples of values include:
 
 - Segmentation arrays
 - Softmax arrays
 - Predicted classifications
 - Predicted scores
-

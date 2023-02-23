@@ -1,15 +1,17 @@
 """Base model interface supported by Bunkerhill's inference pipeline."""
 
+from typing import Any
+
 import abc
 
-from bunkerhill.bunkerhill_types import OutputAttributes
+from bunkerhill.bunkerhill_types import Outputs
 
 
 class BaseModel(abc.ABC):
   """The base interface for a model that support inference()"""
 
   @abc.abstractmethod
-  def inference(self, **kwargs) -> OutputAttributes:
+  def inference(self, **kwargs: Any) -> Outputs:
     """Runs inference on the pixel array for a DICOM series.
 
     Args:

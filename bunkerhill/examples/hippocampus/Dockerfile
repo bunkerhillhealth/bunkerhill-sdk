@@ -1,3 +1,8 @@
+################################################
+# REQUIRED SECTION:
+# The section below must be kept for all models.
+################################################
+
 FROM ubuntu:jammy-20221101
 
 # Sets arguments
@@ -8,7 +13,7 @@ WORKDIR app
 
 # Installs utilities
 RUN apt update -y \
-  && apt install -y curl nano vim wget
+  && apt install -y curl vim wget
 
 # Installs GPU
 # see for template: https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/11.7.0/ubuntu2204/base/Dockerfile
@@ -48,7 +53,7 @@ RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf \
 RUN apt update -y \
   && apt install -y software-properties-common
 RUN DEBIAN_FRONTEND="noninteractive" add-apt-repository ppa:deadsnakes/ppa
-RUN DEBIAN_FRONTEND="noninteractive" apt install -y python3.9
+RUN DEBIAN_FRONTEND="noninteractive" apt install -y python3.9-dev
 
 # python3.9 also installs python3.10, and on ubuntu:jammy python3.10 is the
 # default version. To override this, manually delete and recreate the python3
@@ -62,6 +67,12 @@ RUN DEBIAN_FRONTEND="noninteractive" apt install -y \
   python3-opencv \
   python3-pip \
   python3.9-distutils
+
+##############################################################
+# CUSTOM SECTION:
+# The section below is specific to the MSD Hippocampus model.
+# Please customize it with the commands needed for your model.
+##############################################################
 
 # Download model weights
 RUN wget https://zenodo.org/record/4003545/files/Task004_Hippocampus.zip
@@ -86,4 +97,3 @@ ENV PYTHONUNBUFFERED=1
 RUN useradd -u ${USER_ID} host_user
 # Change to non-root privilege
 USER host_user
-

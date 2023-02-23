@@ -54,4 +54,3 @@ def test_run_inference(tmp_path: Path, grpc_server: Server):
   softmax = outputs[MSDHippocampusModel._SOFTMAX_OUTPUT_ATTRIBUTE_NAME][series_uid]
   assert softmax.shape == (3, 36, 47, 39)
   assert softmax.dtype == np.float16
-

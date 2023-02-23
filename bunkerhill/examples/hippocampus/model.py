@@ -8,7 +8,7 @@ import numpy as np
 
 from bunkerhill import nnunet_wrapper
 from bunkerhill.base_model import BaseModel
-from bunkerhill.bunkerhill_types import OutputAttributes, SeriesUID
+from bunkerhill.bunkerhill_types import Outputs, SeriesInstanceUID
 from bunkerhill.nnunet_wrapper import NNUNetPaths
 from bunkerhill.model_runner import ModelRunner
 
@@ -48,7 +48,7 @@ class MSDHippocampusModel(BaseModel):
     install_pretrained_model_cmd = [self._LOAD_WEIGHTS_COMMAND, self._PRETRAINED_MODEL_FILENAME]
     subprocess.check_call(install_pretrained_model_cmd, timeout=300)
 
-  def inference(self, pixel_array: Dict[SeriesUID, np.ndarray]) -> OutputAttributes:
+  def inference(self, pixel_array: Dict[SeriesInstanceUID, np.ndarray]) -> Outputs:
     """Runs inference on the pixel array for a DICOM series.
 
     Args:

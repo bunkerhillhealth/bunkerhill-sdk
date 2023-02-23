@@ -19,4 +19,3 @@ def model() -> ModelRunner:
 def grpc_server(model) -> Server:
   service = DESCRIPTOR.services_by_name['InferenceProcessor']
   return grpc_testing.server_from_dictionary({service: model}, grpc_testing.strict_real_time())
-

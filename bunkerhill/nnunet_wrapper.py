@@ -8,7 +8,7 @@ from typing import Dict
 import nibabel as nib
 import numpy as np
 
-from bunkerhill.bunkerhill_types import SeriesUID
+from bunkerhill.bunkerhill_types import SeriesInstanceUID
 
 # See inference dataset naming conventions at:
 # https://github.com/MIC-DKFZ/nnUNet/blob/7f1e273fa1021dd2ff00df2ada781ee3133096ef/documentation/data_format_inference.md
@@ -91,7 +91,7 @@ def dump_pixel_array(pixel_array: np.ndarray, nnunet_input_dirname: str) -> None
 
 
 def load_segmentation(outputs_dirname: str, output_attribute_name: str,
-                      series_uid: SeriesUID) -> Dict[str, Dict[str, np.ndarray]]:
+                      series_uid: SeriesInstanceUID) -> Dict[str, Dict[str, np.ndarray]]:
   """Loads the nnUNet output segmentation tensor from a 3D NifTI file to an output attribute dict.
 
   Args:
@@ -116,7 +116,7 @@ def load_segmentation(outputs_dirname: str, output_attribute_name: str,
 
 
 def load_softmax(outputs_dirname: str, output_attribute_name: str,
-                 series_uid: SeriesUID) -> Dict[str, Dict[str, np.ndarray]]:
+                 series_uid: SeriesInstanceUID) -> Dict[str, Dict[str, np.ndarray]]:
   """Loads the nnUNet output softmax tensor from an npz file to an output attribute dict.
 
   Args:

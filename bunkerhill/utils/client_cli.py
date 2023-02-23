@@ -81,4 +81,3 @@ if __name__ == '__main__':
                       required=True,
                       type=str)
   main(parser.parse_args())
-
