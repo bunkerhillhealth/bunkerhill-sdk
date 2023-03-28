@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="bunkerhill",
-  version="0.0.0",
+  version="0.0.1",
   author="Bunkerhill Health",
   description="SDK for integration with Bunkerhill Health",
   long_description=long_description,
