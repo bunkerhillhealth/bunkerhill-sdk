@@ -74,6 +74,12 @@ RUN DEBIAN_FRONTEND="noninteractive" apt install -y \
 # Please customize it with the commands needed for your model.
 ###############################################################
 
+# If needed, copy custom pretrained weights for your model into the Docker image.
+# The example MonaiFlexibleUNet model downloads its pretrained weights at start-up time, for ease
+# of definition, but your model's weights will likely need to be copied into the Docker image as
+# shown below:
+# COPY path/to/local/model_weights.pth model_weights.pth
+
 # Install PyPI requirements for this example
 COPY bunkerhill/examples/monai/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
