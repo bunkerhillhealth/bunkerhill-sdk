@@ -1,7 +1,5 @@
 """The class definition and model server entrypoint for the MonaiFlexibleUNet model."""
 
-import os
-
 from typing import Dict
 
 import numpy as np
@@ -48,7 +46,7 @@ class MonaiFlexibleUNet(BaseModel):
     Returns:
       A dictionary containing the output segmentation and softmax ndarrays.
     """
-    # Ensure pixel_array dict only containers a single series.
+    # Ensure pixel_array dict only contains a single series.
     if len(pixel_array) > 1:
       raise ValueError(f'Model only accepts a single series. {len(pixel_array)} were passed.')
 
