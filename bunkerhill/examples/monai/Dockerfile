@@ -68,21 +68,20 @@ RUN DEBIAN_FRONTEND="noninteractive" apt install -y \
   python3-pip \
   python3.9-distutils
 
-##############################################################
+###############################################################
 # CUSTOM SECTION:
-# The section below is specific to the MSD Hippocampus model.
+# The section below is specific to the MonaiFlexibleUNet model.
 # Please customize it with the commands needed for your model.
-##############################################################
+###############################################################
 
-# Download model weights
-RUN wget https://zenodo.org/record/4003545/files/Task004_Hippocampus.zip
-
-# Toggle SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL until
-# https://github.com/MIC-DKFZ/nnUNet/pull/1209 is included in next nnUNet release
-ENV SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True
+# If needed, copy custom pretrained weights for your model into the Docker image.
+# The example MonaiFlexibleUNet model downloads its pretrained weights at start-up time, for ease
+# of definition, but your model's weights will likely need to be copied into the Docker image as
+# shown below:
+# COPY path/to/local/model_weights.pth model_weights.pth
 
 # Install PyPI requirements for this example
-COPY bunkerhill/examples/hippocampus/requirements.txt requirements.txt
+COPY bunkerhill/examples/monai/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 # Prepares /app/model_release

@@ -8,9 +8,10 @@ their models on the [Bunkerhill Health](https://www.bunkerhillhealth.com/) infer
 1. [Overview](#overview)
 2. [Deploying your model](#deploying-your-model)
 3. [ModelRunner](#modelrunner)
-4. [Example model: hippocampus segmentation](#example-model-hippocampus-segmentation-using-nnunet)
-5. [Inputs](#inputs)
-6. [Outputs](#outputs)
+4. [Example model: hippocampus segmentation with nnU-Net V1](#example-model-hippocampus-segmentation-using-nnunet)
+5. [Example model: MONAI's FlexibleUNet](#example-model-monaiflexibleunet)
+6. [Inputs](#inputs)
+7. [Outputs](#outputs)
 
 ## Overview
 
@@ -27,7 +28,8 @@ You'll need the following components to run model inference on Bunkerhill:
 file to download your model's [PyPI](https://pypi.org/) dependencies
 - A Dockerfile to hermetically build your model with its dependencies in a Docker image. The
 [Dockerfile for the hippocampus model](bunkerhill/examples/hippocampus/Dockerfile) provides an example
-that includes CUDA drivers on an Ubuntu 22.04 image.
+that includes CUDA drivers on an Ubuntu 22.04 image. Depending on where your pretrained weights are
+stored, the Dockerfile will either need to copy them or download them into the Docker image.
 - Test cases to assess model correctness. We also ask that you transfer test data so Bunkerhill
 can continue to measure correctness throughout deployment. An example of model tests is provided
 for the hippocampus example model at
@@ -150,11 +152,19 @@ docker build \
   -f bunkerhill/examples/hippocampus/Dockerfile
 ```
 
+### Define a local directory for inference inputs and outputs
+
+The model requires a directory where the inference inputs and outputs can be read and written. For
+ease of use, consider defining this directory within your home directory.
+```shell
+export DATA_DIRNAME=/path/to/home_directory/model_dir
+mkdir -m=775 -p $DATA_DIRNAME
+```
+
 ### Run unit tests
 
 To run the hippocampus model unit tests, run:
 ```shell
-export DATA_DIRNAME=/tmp
 docker run -it \
   --mount type=bind,source=${DATA_DIRNAME},target=/data \
   hippocampus \
@@ -167,14 +177,13 @@ docker run -it \
 
 To run the hippocampus model as a server awaiting `InferenceRequest` messages, run:
 ```shell
-export DATA_DIRNAME=/tmp
 docker run -it \
   --mount type=bind,source=${DATA_DIRNAME},target=/data \
   hippocampus \
   python bunkerhill/examples/hippocampus/model.py
 ```
 
-#### Generate inference input
+#### Generate hippocampus inference input
 
 To generate input for this model, use the
 [`nifti_to_modelrunner_input.py`](bunkerhill/utils/nifti_to_modelrunner_input.py) utility to
@@ -189,10 +198,9 @@ Once `Task04_Hippocampus.tar` has been unpacked, run the following command to co
 files into a `ModelRelease` input file:
 ```shell
 export NIFTI_FILENAME=/path/to/Task004_Hippocampus/imagesTs/hippocampus_002_0000.nii.gz
-export DATA_DIRNAME=/tmp
 export STUDY_UUID=77d1b303-f8b2-4aca-a84c-6c102d3625e1
 export SERIES_UUID=e57ac58e-c0e8-44ab-be7e-4d17b32f6a8f
-python nifti_to_modelrunner_input.py \
+python bunkerhill/utils/nifti_to_modelrunner_input.py \
   --nifti_filename=${NIFTI_FILENAME} \
   --data_dirname=${DATA_DIRNAME} \
   --study_uuid=${STUDY_UUID} \
@@ -211,7 +219,79 @@ pickled  dictionary of inputs named `${STUDY_UUID}_input.pkl`. After running inf
 Once the server has started, `client_cli.py` can send `InferenceRequest` messages to the `ModelRunner`:
 ```shell
 export STUDY_UUID=77d1b303-f8b2-4aca-a84c-6c102d3625e1
-python client_cli.py \
+python bunkerhill/utils/client_cli.py \
+  --socket_dirname=${DATA_DIRNAME} \
+  --mounted_data_dirname=/data \
+  --study_uuid=${STUDY_UUID}
+```
+
+Once inference has finished, the `ModelRunner` will write `${STUDY_UUID}_output.pkl` to the mounted
+filesystem path and send an `InferenceResponse` back to the client.
+
+## Example model: MonaiFlexibleUNet
+
+The [MonaiFlexibleUNet](bunkerhill/examples/monai/model.py) model demonstrates how to
+make an [MONAI](https://monai.io/core.html) model compatible with the Bunkerhill SDK. It
+wraps a
+[pretrained PyTorch model](https://github.com/Project-MONAI/MONAI/blob/be3d13869d9e0060d17a794d97d528d4e4dcc1fc/monai/networks/nets/flexible_unet.py#L217)
+defined in the MONAI Core library.
+
+### Build Docker image
+
+The MonaiFlexibleUNet model is run as a Docker container. To build the example model, run
+```shell
+docker build \
+  --build-arg USER_ID=$(id -u) \
+  -t monai:latest \
+  . \
+  -f bunkerhill/examples/monai/Dockerfile
+```
+
+### Define a local directory for inference inputs and outputs
+
+The model requires a directory where the inference inputs and outputs can be read and written. For
+ease of use, consider defining this directory within your home directory.
+```shell
+export DATA_DIRNAME=/path/to/home_directory/model_dir
+mkdir -m=775 -p $DATA_DIRNAME
+```
+
+### Run unit tests
+
+To run the `MonaiFlexibleUNet` unit tests, run:
+```shell
+docker run -it \
+  --mount type=bind,source=${DATA_DIRNAME},target=/data \
+  monai \
+  python bunkerhill/examples/monai/test_model.py
+```
+
+### Interact with `ModelRunner` server
+
+#### Start server
+
+To run the `MonaiFlexibleUNet` model as a server awaiting `InferenceRequest` messages, run:
+```shell
+docker run -it \
+  --mount type=bind,source=${DATA_DIRNAME},target=/data \
+  monai \
+  python bunkerhill/examples/monai/model.py
+```
+
+#### Generate `MonaiFlexibleUNet` inference input
+
+To generate input for this model, use the
+[`nifti_to_modelrunner_input.py`](bunkerhill/utils/nifti_to_modelrunner_input.py) utility to
+convert an example NifTi image into the expected input format. Follow the above
+[Generate hippocampus inference input](#generate-hippocampus-inference-input)
+guide to generate example inputs from NifTi files.
+
+#### Send `InferenceRequest` messages
+
+Once the server has started, `client_cli.py` can send `InferenceRequest` messages to the `ModelRunner`:
+```shell
+export STUDY_UUID=77d1b303-f8b2-4aca-a84c-6c102d3625e1
+python bunkerhill/utils/client_cli.py \
   --socket_dirname=${DATA_DIRNAME} \
   --mounted_data_dirname=/data \
   --study_uuid=${STUDY_UUID}
