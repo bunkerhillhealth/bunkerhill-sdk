@@ -95,5 +95,10 @@ ENV PYTHONUNBUFFERED=1
 
 # Add a new user "host_user"
 RUN useradd -u ${USER_ID} host_user
+
+# Make host_user the owner of the /app folder and update folder permissions
+RUN chown -R host_user:host_user /app
+RUN chmod 755 /app
+
 # Change to non-root privilege
 USER host_user
