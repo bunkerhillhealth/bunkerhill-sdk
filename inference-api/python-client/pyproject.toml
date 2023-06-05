@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bunkerhill-inference-api"
+version = "0.0.1"
+description = "Python client for Bunkerhill Inference API"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+authors = [
+  {name = "bunkerhill", email = "engineering@bunkerhillhealth.com"},
+]
+readme = "README.md"
+python_requires = ">=3.9"
+
+[project.dependencies]
+asgiref = "==3.6.0"
+PyJWT = "==2.6.0"
+retry = "==0.9.2"
+requests = "==2.27.1"
+
+[project.urls]
+"Homepage" = "https://github.com/bunkerhillhealth/bunkerhill-sdk/inference-api/python-client"
+
