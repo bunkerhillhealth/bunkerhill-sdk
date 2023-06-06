@@ -85,14 +85,16 @@ class DjangoJWTClient:
   @retry(tries=3, delay=1, backoff=2)
   async def _send_authorization_request(self, client_jwt: jwt.JWT) -> jwt.JWT:
     url = self._django_base_url + self._auth_path
-    response = requests.post(
-      url=url,
-      headers=self.AUTH_REQUEST_HEADERS,
-      data={
-        'jwt': client_jwt.decode('utf-8')
-      })
-    status = response.status_code
-    if status >= 400:
+    try:
+      response = requests.post(
+        url=url,
+        headers=self.AUTH_REQUEST_HEADERS,
+        data={
+          'jwt': client_jwt.decode('utf-8')
+        })
+      status_code = response.status_code
+      response.raise_for_status()
+    except:
       raise InferenceApiRequestFailedError(url, 'POST', status_code)
     response_json = json.loads(response.content)    
     return response_json['token']
