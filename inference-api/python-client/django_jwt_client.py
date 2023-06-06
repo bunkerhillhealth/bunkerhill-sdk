@@ -1,6 +1,5 @@
 import json
 import jwt
-import logging
 import requests
 import traceback
 
@@ -9,6 +8,8 @@ from retry import retry
 from typing import Any, Dict, Final, Optional
 
 import pytz
+
+from .exceptions import JSONResponseParseError, InferenceApiRequestFailedError
 
 
 class DjangoJWTClient:
@@ -36,6 +37,29 @@ class DjangoJWTClient:
     self._django_base_url = base_url
     self._auth_path = auth_path
     self._num_failures_allowed = num_failures_allowed
+
+  @retry(tries=3, delay=1, backoff=2)
+  async def get_json(self, resource_path: str) -> Any:
+    await self._ensure_jwt()
+    headers = self._create_request_header()
+    url = self._django_base_url + resource_path
+    
+    try:
+      response = requests.get(
+        url=url,
+        headers=headers)
+      status = response.status_code
+      response.raise_for_status()
+    except:
+      self._handle_failed_request(url, 'GET', status)
+
+    try:
+      response_json = json.loads(response.content)
+    except:
+      raise JSONResponseParseError()
+    else:
+      self._num_failures = 0
+    return response_json
 
   async def _ensure_jwt(self) -> None:
     if self._should_refresh_jwt():
@@ -67,37 +91,17 @@ class DjangoJWTClient:
       data={
         'jwt': client_jwt.decode('utf-8')
       })
-    response.raise_for_status()
+    status = response.status_code
+    if status >= 400:
+      raise InferenceApiRequestFailedError(url, 'POST', status_code)
     response_json = json.loads(response.content)    
     return response_json['token']
 
-  @retry(tries=3, delay=1, backoff=2)
-  async def get_json(self, resource_path: str) -> Any:
-    await self._ensure_jwt()
-    headers = self._create_request_header()
-    url = self._django_base_url + resource_path
-    try:
-      response = requests.get(
-        url=url,
-        headers=headers)
-      response.raise_for_status()
-      response_json = json.loads(response.content)
-    except:
-      self._handle_failed_request(url, 'GET')
-    else:
-      self._num_failures = 0
-
-    return response_json
-
-  def _handle_failed_request(self, url: str, action: str):
+  def _handle_failed_request(self, url: str, action: str, status_code: int):
     self._num_failures += 1
     if self._should_reset_access_jwt():
       self._access_jwt = None
-    logging.error(traceback.format_exc())
-    logging.error(
-      f'Failed {action} {url} to Django: '
-      f'{self._num_failures} consecutive failures')
-    raise
+    raise InferenceApiRequestFailedError(url, action, status_code)
 
   def _should_reset_access_jwt(self) -> bool:
     return self._is_jwt_expired() or self._num_failures % self._num_failures_allowed == 1
