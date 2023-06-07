@@ -14,7 +14,7 @@ from .django_jwt_client import DjangoJWTClient
 
 class InferenceAPIClient:
   AUTH_PATH: Final[str] = '/api/auth/jwt_login'
-  GET_INFERENCE_PATH: Final[str] = 'models/{model_id}/inferences/{study_instance_uid}/{series_instance_uid}'
+  GET_INFERENCE_PATH: Final[str] = 'models/{model_id}/patients/{patient_mrn}/inferences'
 
   def __init__(
     self,
@@ -49,54 +49,57 @@ class InferenceAPIClient:
   async def get_inference_async(
     self,
     model_id: str,
-    study_instance_uid: str,
-    series_instance_uid: str,
-    segmentation_destination_filename: str,
-  ) -> Inference:
+    patient_mrn: str,
+    segmentation_destination_dirname: str,
+  ) -> List[Inference]:
     resource_path = self.GET_INFERENCE_PATH.format(
       model_id=model_id,
       study_instance_uid=study_instance_uid,
       series_instance_uid=series_instance_uid,
     )
     response_json = await self._django_jwt_client.get_json(resource_path)
-    self._download_segmentation(
-      presigned_url=response_json['segmentation_presigned_url'],
-      destination_filename=segmentation_destination_filename,
-    )
-    return Inference(
-      model_id=model_id,
-      study_instance_uid=study_instance_uid,
-      series_instance_uid=series_instance_uid,
-      segmentation_presigned_url=response_json['segmentation_presigned_url'],
-    )
+    inferences: List[Inference] = []
+    for inference in response_json:
+      self._download_segmentations(
+        presigned_urls=response_json['segmentation_presigned_urls'],
+        destination_dirname=segmentation_destination_dirname,
+      )
+      inferences.append(
+        Inference(
+          model_id=model_id,
+          patient_mrn=patient_mrn,
+          segmentation_presigned_urls=response_json['segmentation_presigned_urls'],
+      ))
+    return inferences
 
   def get_inference(
     self,
     model_id: str,
-    study_instance_uid: str,
-    series_instance_uid: str,
-    segmentation_destination_filename: str,
+    patient_mrn: str,
+    segmentation_destination_dirname: str,
   ) -> Inference:
     return async_to_sync(self.get_inference_async)(
       model_id=model_id,
-      study_instance_uid=study_instance_uid,
-      series_instance_uid=series_instance_uid,
-      segmentation_destination_filename=segmentation_destination_filename,
+      patient_mrn=patient_mrn,
+      segmentation_destination_dirname=segmentation_destination_dirname,
     )
 
-  def _download_segmentation(
+  def _download_segmentations(
     self,
-    presigned_url: str,
-    destination_filename: str,
+    presigned_urls: str,
+    destination_dirname: str,
   ) -> None:
-    try:
-      response = requests.get(presigned_url)
-      response.raise_for_status()
-      content = response.content
-    except:
-      raise SegmentationDownloadError(presigned_url)
-    try:
-      with open(destination_filename, 'wb') as f:
-        f.write(content)
-    except:
-        raise FailedToWriteSegmentationError(destination_filename)
+    for presigned_url in presigned_urls:
+      basename = 'TODO' # TODO: Compute basename of downloaded presigned URL based on returned data.
+      destination_filename = os.path.join(destination_dirname, destination_basename)
+      try:
+        response = requests.get(presigned_url)
+        response.raise_for_status()
+        content = response.content
+      except:
+        raise SegmentationDownloadError(presigned_url)
+      try:
+        with open(destination_filename, 'wb') as f:
+          f.write(content)
+      except:
+          raise FailedToWriteSegmentationError(destination_filename)
