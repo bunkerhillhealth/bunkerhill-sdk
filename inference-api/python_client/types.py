@@ -1,4 +1,4 @@
-from typing import Any, TypedDict
+from typing import List, TypedDict
 
 
 class Inference(TypedDict):
