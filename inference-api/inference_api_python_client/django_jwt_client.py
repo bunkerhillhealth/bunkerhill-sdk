@@ -46,7 +46,7 @@ class DjangoJWTClient:
   async def get_json(self, resource_path: str) -> Any:
     await self._ensure_jwt()
     headers = self._create_request_header()
-    url = self._django_base_url + resource_path
+    url = os.path.join(self._django_base_url, resource_path)
 
     async with aiohttp.ClientSession() as session:
       async with session.get(url, headers=headers) as response:
@@ -86,7 +86,7 @@ class DjangoJWTClient:
 
   @retry(tries=3, delay=1, backoff=2)
   async def _send_authorization_request(self, client_jwt: str) -> str:
-    url = self._django_base_url + self._auth_path
+    url = os.path.join(self._django_base_url, self._auth_path)
 
     async with aiohttp.ClientSession() as session:
       async with session.post(

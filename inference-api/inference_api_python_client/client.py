@@ -16,6 +16,8 @@ from .types import Inference
 from .django_jwt_client import DjangoJWTClient
 
 class InferenceAPIClient:
+  """Client for interacting with the Bunkerhill Health Inference API.
+  """
   AUTH_PATH: Final[str] = 'api/auth/jwt_login/'
   GET_INFERENCE_PATH: Final[str] = 'api/models/{model_id}/patients/{patient_mrn}/inferences/'
 
@@ -26,6 +28,14 @@ class InferenceAPIClient:
     private_key_string: Optional[str] = None,
     base_url: str = 'https://api.bunkerhillhealth.com/',
   ) -> None:
+    """Constructs an InferenceAPIClient.
+
+    Args:
+        username (str): Username for authentication.
+        private_key_filename (str, optional): Path to the private key file for authentication.
+        private_key_string (str, optional): String representation of the private key for authentication.
+        base_url (str, optional): Base URL for the API. Defaults to 'https://api.bunkerhillhealth.com/'.
+    """
     self._validate_args(private_key_filename, private_key_string)
     if private_key_filename:
       with open(private_key_filename, 'r') as f:
@@ -57,6 +67,17 @@ class InferenceAPIClient:
     patient_mrn: str,
     segmentation_destination_dirname: str,
   ) -> List[Inference]:
+    """Asynchronous function to fetch inferences from the API matching the model_id and patient_mrn, and
+    download their segmentations locally.
+
+    Args:
+        model_id (str): Model ID for the inferences.
+        patient_mrn (str): Medical record number (MRN) of the patient.
+        segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
+
+    Returns:
+        List[Inference]: List of Inference objects fetched from the API.
+    """
     resource_path = self.GET_INFERENCE_PATH.format(
       model_id=model_id,
       patient_mrn=patient_mrn,
@@ -81,7 +102,18 @@ class InferenceAPIClient:
     model_id: str,
     patient_mrn: str,
     segmentation_destination_dirname: str,
-  ) -> Inference:
+  ) -> List[Inference]:
+    """Function to fetch inferences from the API matching the model_id and patient_mrn, and
+    download their segmentations locally.
+
+    Args:
+        model_id (str): Model ID for the inferences.
+        patient_mrn (str): Medical record number (MRN) of the patient.
+        segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
+
+    Returns:
+        List[Inference]: List of Inference objects fetched from the API.
+    """
     return async_to_sync(self.get_inferences_async)(
       model_id=model_id,
       patient_mrn=patient_mrn,
