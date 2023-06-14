@@ -1,4 +1,4 @@
-# Bunkerhill Health SDK
+# Bunkerhill Health Model SDK
 
 This repository contains an SDK for researchers to use as they prepared to deploy
 their models on the [Bunkerhill Health](https://www.bunkerhillhealth.com/) inference platform.
