@@ -1,3 +1,5 @@
+"""Class definition for Inference API Client."""
+
 import os
 
 from typing import Final, List, Optional

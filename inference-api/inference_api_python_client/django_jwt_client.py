@@ -1,3 +1,5 @@
+"""Client for connecting to Bunkerhill's Django server, which serves the Inference API"""
+
 import json
 import traceback
 
@@ -14,6 +16,8 @@ from .exceptions import JSONResponseParseError, InferenceAPIRequestFailedError
 
 
 class DjangoJWTClient:
+  """Client for Bunkerhill's Django server, using JWT authentication"""
+
   CLIENT_JWT_ENCODING_ALGORITHM: Final[str] = 'RS256'
   AUTH_REQUEST_HEADERS: Final[Dict[str, str]] = {
     'Content-Type': 'application/json',
@@ -36,6 +40,16 @@ class DjangoJWTClient:
     auth_path: str,
     num_failures_allowed: int = 3
   ) -> None:
+    """Constructs a DjangoJWTClient.
+
+    Args:
+        username (str): Username for authentication.
+        client_private_key (str): Private key string for authentication.
+        base_url (str): Base URL for the API.
+        auth_path (str): Path to the authentication endpoint for the API.
+        num_failures_allowed (int): Number of failed requests before attempting to refresh the auth JWT. Default 3.
+    """
+
     self._username = username
     self._client_private_key = client_private_key
     self._django_base_url = base_url
@@ -44,6 +58,16 @@ class DjangoJWTClient:
 
   @retry(tries=3, delay=1, backoff=2)
   async def get_json(self, resource_path: str) -> Any:
+    """Queries an endpoint and returns the JSON that the server responds with.
+
+    Args:
+      resource_path(str): Path to the endpoint to query.
+
+    Returns:
+      A JSON object parsed from the server's response.
+    """
+
+
     await self._ensure_jwt()
     headers = self._create_request_header()
     url = os.path.join(self._django_base_url, resource_path)

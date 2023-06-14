@@ -1,9 +1,12 @@
+"""Exceptions raised in the Inference API Client package"""
+
 from typing import Optional
 
 import requests
 
 
 class InvalidInferenceAPIClientArgsException(Exception):
+  """Exception raised when invalid arguments are passed to the InferenceAPIClient constructor"""
 
   def __init__(
     self,
@@ -16,6 +19,7 @@ class InvalidInferenceAPIClientArgsException(Exception):
 
 
 class SegmentationDownloadError(Exception):
+  """Exception raised segmentation fails to download from a given presigned URL"""
 
   def __init__(
     self,
@@ -27,6 +31,7 @@ class SegmentationDownloadError(Exception):
 
 
 class FailedToWriteSegmentationError(Exception):
+  """Exception raised when a downloaded segmentation fails to write to disk"""
 
   def __init__(
     self,
@@ -37,6 +42,8 @@ class FailedToWriteSegmentationError(Exception):
 
 
 class JSONResponseParseError(Exception):
+  """Exception raised when a response from the server cannot be parsed into JSON"""
+
 
   def __init__(
     self,
@@ -46,6 +53,7 @@ class JSONResponseParseError(Exception):
 
 
 class InferenceAPIRequestFailedError(Exception):
+  """Exception raised when a request to the Inference API server returns a 400- or 500- status response."""
 
   def __init__(
     self,
