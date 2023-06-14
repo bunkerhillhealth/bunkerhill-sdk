@@ -1,13 +1,14 @@
 import json
-import jwt
-import requests
 import traceback
 
 from datetime import datetime, timedelta
-from retry import retry
 from typing import Any, Dict, Final, Optional
 
+import aiohttp
+import jwt
 import pytz
+
+from retry import retry
 
 from .exceptions import JSONResponseParseError, InferenceAPIRequestFailedError
 
@@ -46,23 +47,20 @@ class DjangoJWTClient:
     await self._ensure_jwt()
     headers = self._create_request_header()
     url = self._django_base_url + resource_path
-    
-    try:
-      response = requests.get(
-        url=url,
-        headers=headers)
-      status = response.status_code
-      response.raise_for_status()
-    except:
-      self._handle_failed_request(url, 'GET', response)
 
+    async with aiohttp.ClientSession() as session:
+      async with session.get(url, headers=headers) as response:
+        return await self._parse_response_json(response, action='GET')
+
+  async def _parse_response_json(self, response: aiohttp.Response, action: str) -> Any:
+    if response.status >= 400:
+      self._handle_failed_request(url, action, response)
     try:
-      response_json = json.loads(response.content)
+      response_json = await response.json()
+      self._num_failures = 0
+      return response_json
     except:
       raise JSONResponseParseError()
-    else:
-      self._num_failures = 0
-    return response_json
 
   async def _ensure_jwt(self) -> None:
     if self._should_refresh_jwt():
@@ -89,20 +87,15 @@ class DjangoJWTClient:
   @retry(tries=3, delay=1, backoff=2)
   async def _send_authorization_request(self, client_jwt: str) -> str:
     url = self._django_base_url + self._auth_path
-    try:
-      response = requests.post(
-        url=url,
+
+    async with aiohttp.ClientSession() as session:
+      async with session.post(
+        url,
         headers=self.AUTH_REQUEST_HEADERS,
-        data=json.dumps({
-          'jwt': client_jwt
-        })
-      )
-      status_code = response.status_code
-      response.raise_for_status()
-    except:
-      raise InferenceAPIRequestFailedError(url, 'POST', response)
-    response_json = json.loads(response.content)    
-    return response_json['token']
+        json={'jwt': client_jwt},
+      ) as response:
+        response_json = await self._parse_response_json(response, action='POST')
+        return response_json['token']
 
   def _handle_failed_request(self, url: str, action: str, response: requests.Response):
     self._num_failures += 1

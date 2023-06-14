@@ -1,9 +1,11 @@
 import os
-import requests
+
+from typing import Final, List, Optional
+
+import aiohttp
 
 from asgiref.sync import async_to_sync
 from retry import retry
-from typing import Final, List, Optional
 
 from .exceptions import (
   FailedToWriteSegmentationError,
@@ -62,7 +64,7 @@ class InferenceAPIClient:
     response_json = await self._django_jwt_client.get_json(resource_path)
     inferences: List[Inference] = []
     for inference in response_json:
-      self._download_segmentations(
+      await self._download_segmentations(
         presigned_urls=inference['segmentation_presigned_urls'],
         destination_dirname=segmentation_destination_dirname,
       )
@@ -86,25 +88,24 @@ class InferenceAPIClient:
       segmentation_destination_dirname=segmentation_destination_dirname,
     )
 
-  def _download_segmentations(
+  async def _download_segmentations(
     self,
     presigned_urls: str,
     destination_dirname: str,
   ) -> None:
-    for presigned_url in presigned_urls:
-      destination_basename = self._get_destination_basename(presigned_url)
-      destination_filename = os.path.join(destination_dirname, destination_basename)
-      try:
-        response = requests.get(presigned_url)
-        response.raise_for_status()
-        content = response.content
-      except:
-        raise SegmentationDownloadError(presigned_url)
-      try:
-        with open(destination_filename, 'wb') as f:
-          f.write(content)
-      except:
-          raise FailedToWriteSegmentationError(destination_filename)
+    async with aiohttp.ClientSession() as session:
+      for presigned_url in presigned_urls:
+        destination_basename = self._get_destination_basename(presigned_url)
+        destination_filename = os.path.join(destination_dirname, destination_basename)
+        async with session.get(presigned_url) as response:
+          if response.status >= 400 or not hasattr(response, 'content'):
+            raise SegmentationDownloadError(presigned_url)
+          content = await response.read()
+        try:
+          with open(destination_filename, 'wb') as f:
+            f.write(content)
+        except:
+            raise FailedToWriteSegmentationError(destination_filename)
 
   def _get_destination_basename(self, presigned_url: str) -> str:
     base_url = presigned_url.split('?')[0]
