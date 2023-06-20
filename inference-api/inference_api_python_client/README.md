@@ -36,23 +36,22 @@ The credentials are exchanged with the server for a JWT access token, which is m
 
 ## Usage Instructions
 
-Once installed, import the library into your Python file and make calls to the API using the `InferenceAPIClient`.
+Once installed, import the library into your Python file and make calls to the API using the `InferenceAPIClient`. 
 
 For example, to query for all inferences for patient with mrn `$PATIENT_MRN` and model ID `$MODEL_ID`, and download the predections generated for those inferences to `$DIRNAME`, run:
 
 ```
 from inference_api_python_client import InferenceAPIClient
 
-client = InferenceAPIClient(
+async with InferenceAPIClient(
   username='$USERNAME',
   private_key_filename='private_key.pem',
-)
-
-inference_list = client.get_inferences(
-  model_id='$MODEL_ID',
-  patient_mrn='$PATIENT_MRN',
-  segmentation_destination_dirname='$DIRNAME',
-)
+) as client:
+  inference_list = client.get_inferences(
+    model_id='$MODEL_ID',
+    patient_mrn='$PATIENT_MRN',
+    segmentation_destination_dirname='$DIRNAME',
+  )
 ```
 
 ## API Reference
