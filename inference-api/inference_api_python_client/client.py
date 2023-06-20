@@ -23,6 +23,8 @@ class InferenceAPIClient:
   AUTH_PATH: Final[str] = 'api/auth/jwt_login/'
   GET_INFERENCE_PATH: Final[str] = 'api/models/{model_id}/patients/{patient_mrn}/inferences/'
 
+  _session: aiohttp.ClientSession
+
   def __init__(
     self,
     username: str,
@@ -52,6 +54,13 @@ class InferenceAPIClient:
       base_url=base_url,
       auth_path=self.AUTH_PATH,
     )
+
+  async def __aenter__(self):
+    self._session = aiohttp.ClientSession()
+    return self
+
+  async def __aexit__(self, exc_type, exc, tb):
+    await self._session.close()
 
   def _validate_args(
     self,
@@ -92,7 +101,7 @@ class InferenceAPIClient:
       model_id=model_id,
       patient_mrn=patient_mrn,
     )
-    response_json = await self._django_jwt_client.get_json(resource_path)
+    response_json = await self._django_jwt_client.get_json(resource_path, self._session)
     inferences: List[Inference] = []
     for inference in response_json:
       await self._download_segmentations(
@@ -141,19 +150,18 @@ class InferenceAPIClient:
     presigned_urls: str,
     destination_dirname: str,
   ) -> None:
-    async with aiohttp.ClientSession() as session:
-      for presigned_url in presigned_urls:
-        destination_basename = self._get_destination_basename(presigned_url)
-        destination_filename = os.path.join(destination_dirname, destination_basename)
-        async with session.get(presigned_url) as response:
-          if response.status >= 400 or not hasattr(response, 'content'):
-            raise SegmentationDownloadError(presigned_url)
-          content = await response.read()
-        try:
-          with open(destination_filename, 'wb') as f:
-            f.write(content)
-        except:
-          raise FailedToWriteSegmentationError(destination_filename)
+    for presigned_url in presigned_urls:
+      destination_basename = self._get_destination_basename(presigned_url)
+      destination_filename = os.path.join(destination_dirname, destination_basename)
+      async with self._session.get(presigned_url) as response:
+        if response.status >= 400 or not hasattr(response, 'content'):
+          raise SegmentationDownloadError(presigned_url)
+        content = await response.read()
+      try:
+        with open(destination_filename, 'wb') as f:
+          f.write(content)
+      except:
+        raise FailedToWriteSegmentationError(destination_filename)
 
   def _get_destination_basename(self, presigned_url: str) -> str:
     base_url = presigned_url.split('?')[0]

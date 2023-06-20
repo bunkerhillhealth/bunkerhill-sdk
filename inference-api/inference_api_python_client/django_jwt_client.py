@@ -62,23 +62,23 @@ class DjangoJWTClient:
     self._num_failures_allowed = num_failures_allowed
 
   @retry(tries=3, delay=1, backoff=2)
-  async def get_json(self, resource_path: str) -> Any:
+  async def get_json(self, resource_path: str, session: aiohttp.ClientSession) -> Any:
     """Queries an endpoint and returns the JSON that the server responds with.
 
     Args:
       resource_path(str): Path to the endpoint to query.
+      session: A ClientSession in which to send the request.
 
     Returns:
       A JSON object parsed from the server's response.
     """
 
-    await self._ensure_jwt()
+    await self._ensure_jwt(session)
     headers = self._create_request_header()
     url = os.path.join(self._django_base_url, resource_path)
 
-    async with aiohttp.ClientSession() as session:
-      async with session.get(url, headers=headers) as response:
-        return await self._parse_response_json(url, response, action='GET')
+    async with session.get(url, headers=headers) as response:
+      return await self._parse_response_json(url, response, action='GET')
 
   async def _parse_response_json(self, url: str, response: aiohttp.ClientResponse, action: str) -> Any:
     if response.status >= 400:
@@ -90,9 +90,9 @@ class DjangoJWTClient:
     except:
       raise JSONResponseParseError()
 
-  async def _ensure_jwt(self) -> None:
+  async def _ensure_jwt(self, session: aiohttp.ClientSession) -> None:
     if self._should_refresh_jwt():
-      await self._authorize()
+      await self._authorize(session)
 
   def _should_refresh_jwt(self) -> bool:
     return (not self._access_jwt) or self._is_jwt_expired_or_invalid()
@@ -106,27 +106,26 @@ class DjangoJWTClient:
     except:
       return True
 
-  async def _authorize(self):
+  async def _authorize(self, session: aiohttp.ClientSession):
     data_to_encode = {
       'iss': 'inference_api_python_client',
       'exp': datetime.utcnow() + timedelta(minutes=30),
       'username': self._username,
     }
     client_jwt = jwt.encode(data_to_encode, self._client_private_key, algorithm=self.CLIENT_JWT_ENCODING_ALGORITHM)
-    self._access_jwt = await self._send_authorization_request(client_jwt)
+    self._access_jwt = await self._send_authorization_request(client_jwt, session)
 
   @retry(tries=3, delay=1, backoff=2)
-  async def _send_authorization_request(self, client_jwt: str) -> str:
+  async def _send_authorization_request(self, client_jwt: str, session: aiohttp.ClientSession) -> str:
     url = os.path.join(self._django_base_url, self._auth_path)
 
-    async with aiohttp.ClientSession() as session:
-      async with session.post(
-        url,
-        headers=self.AUTH_REQUEST_HEADERS,
-        json={'jwt': client_jwt},
-      ) as response:
-        response_json = await self._parse_response_json(url, response, action='POST')
-        return response_json['token']
+    async with session.post(
+      url,
+      headers=self.AUTH_REQUEST_HEADERS,
+      json={'jwt': client_jwt},
+    ) as response:
+      response_json = await self._parse_response_json(url, response, action='POST')
+      return response_json['token']
 
   async def _handle_failed_request(self, url: str, action: str, response: aiohttp.ClientResponse):
     self._num_failures += 1
