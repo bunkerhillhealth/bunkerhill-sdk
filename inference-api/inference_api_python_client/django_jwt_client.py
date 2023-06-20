@@ -1,5 +1,6 @@
 """Client for connecting to Bunkerhill's Django server, which serves the Inference API"""
 
+import os
 import json
 import traceback
 
@@ -74,11 +75,11 @@ class DjangoJWTClient:
 
     async with aiohttp.ClientSession() as session:
       async with session.get(url, headers=headers) as response:
-        return await self._parse_response_json(response, action='GET')
+        return await self._parse_response_json(url, response, action='GET')
 
-  async def _parse_response_json(self, response: aiohttp.Response, action: str) -> Any:
+  async def _parse_response_json(self, url: str, response: aiohttp.ClientResponse, action: str) -> Any:
     if response.status >= 400:
-      self._handle_failed_request(url, action, response)
+      await self._handle_failed_request(url, action, response)
     try:
       response_json = await response.json()
       self._num_failures = 0
@@ -91,13 +92,16 @@ class DjangoJWTClient:
       await self._authorize()
 
   def _should_refresh_jwt(self) -> bool:
-    return (not self._access_jwt) or self._is_jwt_expired()
+    return (not self._access_jwt) or self._is_jwt_expired_or_invalid()
 
-  def _is_jwt_expired(self) -> bool:
-    decoded = jwt.decode(self._access_jwt, options={"verify_signature": False})
-    exp_timestamp = decoded.get('exp')
-    exp = datetime.fromtimestamp(exp_timestamp)
-    return datetime.utcnow() > exp
+  def _is_jwt_expired_or_invalid(self) -> bool:
+    try:
+      decoded = jwt.decode(self._access_jwt, options={"verify_signature": False})
+      exp_timestamp = decoded.get('exp')
+      exp = datetime.fromtimestamp(exp_timestamp)
+      return datetime.utcnow() > exp
+    except:
+      return True
 
   async def _authorize(self):
     data_to_encode = {
@@ -118,17 +122,21 @@ class DjangoJWTClient:
         headers=self.AUTH_REQUEST_HEADERS,
         json={'jwt': client_jwt},
       ) as response:
-        response_json = await self._parse_response_json(response, action='POST')
+        response_json = await self._parse_response_json(url, response, action='POST')
         return response_json['token']
 
-  def _handle_failed_request(self, url: str, action: str, response: requests.Response):
+  async def _handle_failed_request(self, url: str, action: str, response: aiohttp.ClientResponse):
     self._num_failures += 1
     if self._should_reset_access_jwt():
       self._access_jwt = None
-    raise InferenceAPIRequestFailedError(url, action, response)
+    try:
+      error = await response.json()['detail']
+    except:
+      error = await response.text()
+    raise InferenceAPIRequestFailedError(url, action, response, error)
 
   def _should_reset_access_jwt(self) -> bool:
-    return self._is_jwt_expired() or self._num_failures % self._num_failures_allowed == 1
+    return self._is_jwt_expired_or_invalid() or self._num_failures % self._num_failures_allowed == 1
 
   def _create_request_header(self) -> Dict[str, str]:
     return {

@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-import requests
+import aiohttp
 
 
 class InvalidInferenceAPIClientArgsException(Exception):
@@ -59,16 +59,13 @@ class InferenceAPIRequestFailedError(Exception):
     self,
     url: str,
     action: str,
-    response: requests.Response,
-    message: str = 'Inference API request failed: {action} {url} returned a status code of {status_code} with error: {error_message}',
+    response: aiohttp.ClientResponse,
+    error: str,
+    message: str = 'Inference API request failed: {action} {url} returned a status code of {status_code} with error: {error}',
   ) -> None:
-    try:
-      error_message = response.json()['detail']
-    except:
-      error_message = response.text
     super().__init__(message.format(
       url=url,
       action=action,
-      status_code=response.status_code,
-      error_message=error_message,
+      status_code=response.status,
+      error=error,
     ))
