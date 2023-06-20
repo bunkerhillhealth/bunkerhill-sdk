@@ -153,7 +153,7 @@ class InferenceAPIClient:
           with open(destination_filename, 'wb') as f:
             f.write(content)
         except:
-            raise FailedToWriteSegmentationError(destination_filename)
+          raise FailedToWriteSegmentationError(destination_filename)
 
   def _get_destination_basename(self, presigned_url: str) -> str:
     base_url = presigned_url.split('?')[0]

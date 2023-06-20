@@ -72,7 +72,6 @@ class DjangoJWTClient:
       A JSON object parsed from the server's response.
     """
 
-
     await self._ensure_jwt()
     headers = self._create_request_header()
     url = os.path.join(self._django_base_url, resource_path)
