@@ -44,11 +44,15 @@ class DjangoJWTClient:
     """Constructs a DjangoJWTClient.
 
     Args:
-        username (str): Username for authentication.
-        client_private_key (str): Private key string for authentication.
-        base_url (str): Base URL for the API.
-        auth_path (str): Path to the authentication endpoint for the API.
-        num_failures_allowed (int): Number of failed requests before attempting to refresh the auth JWT. Default 3.
+      username (str): Username for authentication.
+      client_private_key (str): Private key string for authentication.
+      base_url (str): Base URL for the API.
+      auth_path (str): Path to the authentication endpoint for the API.
+      num_failures_allowed (int): Number of failed requests before attempting to refresh the auth JWT. Default 3.
+    
+    Raises:
+      InferenceAPIRequestFailedError: If a 400- or 500- response is received from the server.
+      JSONResponseParseError: If a 200- response is received from the server, but it contains invalid JSON.
     """
 
     self._username = username

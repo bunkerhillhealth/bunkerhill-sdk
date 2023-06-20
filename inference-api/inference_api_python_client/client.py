@@ -33,10 +33,12 @@ class InferenceAPIClient:
     """Constructs an InferenceAPIClient.
 
     Args:
-        username (str): Username for authentication.
-        private_key_filename (str, optional): Path to the private key file for authentication.
-        private_key_string (str, optional): String representation of the private key for authentication.
-        base_url (str, optional): Base URL for the API. Defaults to 'https://api.bunkerhillhealth.com/'.
+      username (str): Username for authentication.
+      private_key_filename (str, optional): Path to the private key file for authentication.
+      private_key_string (str, optional): String representation of the private key for authentication.
+      base_url (str, optional): Base URL for the API. Defaults to 'https://api.bunkerhillhealth.com/'.
+    Raises:
+      InvalidInferenceAPIClientArgsException: If invalid arguments are passed to the constructor.
     """
     self._validate_args(private_key_filename, private_key_string)
     if private_key_filename:
@@ -73,12 +75,18 @@ class InferenceAPIClient:
     download their segmentations locally.
 
     Args:
-        model_id (str): Model ID for the inferences.
-        patient_mrn (str): Medical record number (MRN) of the patient.
-        segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
+      model_id (str): Model ID for the inferences.
+      patient_mrn (str): Medical record number (MRN) of the patient.
+      segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
 
     Returns:
-        List[Inference]: List of Inference objects fetched from the API.
+      List[Inference]: List of Inference objects fetched from the API.
+
+    Raises:
+      InferenceAPIRequestFailedError: If a 400- or 500- response is received from the server.
+      JSONResponseParseError: If a 200- response is received from the server, but it contains invalid JSON.
+      SegmentationDownloadError: If one or more segmentations at the URLs returned by the server fail to download.
+      FailedToWriteSegmentationError: If segmentation_destination_dirname is invalid or lacks write permissions.
     """
     resource_path = self.GET_INFERENCE_PATH.format(
       model_id=model_id,
@@ -109,12 +117,18 @@ class InferenceAPIClient:
     download their segmentations locally.
 
     Args:
-        model_id (str): Model ID for the inferences.
-        patient_mrn (str): Medical record number (MRN) of the patient.
-        segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
+      model_id (str): Model ID for the inferences.
+      patient_mrn (str): Medical record number (MRN) of the patient.
+      segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
 
     Returns:
-        List[Inference]: List of Inference objects fetched from the API.
+      List[Inference]: List of Inference objects fetched from the API.
+
+    Raises:
+      InferenceAPIRequestFailedError: If a 400- or 500- response is received from the server.
+      JSONResponseParseError: If a 200- response is received from the server, but it contains invalid JSON.
+      SegmentationDownloadError: If one or more segmentations at the URLs returned by the server fail to download.
+      FailedToWriteSegmentationError: If segmentation_destination_dirname is invalid or lacks write permissions.
     """
     return async_to_sync(self.get_inferences_async)(
       model_id=model_id,
