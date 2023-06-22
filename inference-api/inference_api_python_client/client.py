@@ -2,7 +2,7 @@
 
 import os
 
-from typing import Final, List, Optional
+from typing import Any, Dict, Final, List, Optional
 
 import aiohttp
 
@@ -14,8 +14,8 @@ from .exceptions import (
   InvalidInferenceAPIClientArgsException,
   SegmentationDownloadError,
 )
-from .types import Inference
 from .django_jwt_client import DjangoJWTClient
+from .types import Inference
 
 class InferenceAPIClient:
   """Client for interacting with the Bunkerhill Health Inference API.
@@ -89,7 +89,7 @@ class InferenceAPIClient:
       segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
 
     Returns:
-      List[Inference]: List of Inference objects fetched from the API.
+      List of Inferences (each in Dict form, loaded from JSON) fetched from the API.
 
     Raises:
       InferenceAPIRequestFailedError: If a 400- or 500- response is received from the server.
@@ -101,20 +101,7 @@ class InferenceAPIClient:
       model_id=model_id,
       patient_mrn=patient_mrn,
     )
-    response_json = await self._django_jwt_client.get_json(resource_path, self._session)
-    inferences: List[Inference] = []
-    for inference in response_json:
-      await self._download_segmentations(
-        presigned_urls=inference['segmentation_presigned_urls'],
-        destination_dirname=segmentation_destination_dirname,
-      )
-      inferences.append(
-        Inference(
-          model_id=model_id,
-          patient_mrn=patient_mrn,
-          segmentation_presigned_urls=inference['segmentation_presigned_urls'],
-      ))
-    return inferences
+    return await self._django_jwt_client.get_json(resource_path, self._session)
 
   def get_inferences(
     self,
@@ -131,7 +118,7 @@ class InferenceAPIClient:
       segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
 
     Returns:
-      List[Inference]: List of Inference objects fetched from the API.
+      List of Inferences (each in Dict form, loaded from JSON) fetched from the API.
 
     Raises:
       InferenceAPIRequestFailedError: If a 400- or 500- response is received from the server.

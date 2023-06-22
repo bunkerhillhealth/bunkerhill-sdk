@@ -94,7 +94,7 @@ patient_mrn (str): The medical record number (MRN) of the patient. \
 segmentation_destination_dirname (str): The directory where the downloaded segmentation data will be stored.
 
 ##### Returns:
-List[Inference]: A list of Inference objects.
+List[Inference]: A list of JSON Dicts, one for each Inference.
 
 _Notes:_
 
@@ -112,21 +112,3 @@ get_inferences_async(
  ) -> List[Inference]
 ```
 Asynchronous version of `get_inferences`. The `get_inferences_async` method should be used when running the client in an environment that supports asynchronous tasks, especially when handling larger data sets.
-
-### Inference
-
-Inference is a TypedDict containing information about a single inference returned by the API.
-
-#### Fields
-
-`model_id: str`
-
-The model identifier for the inference.
-
-`patient_mrn: str`
-
-The medical record number (MRN) of the patient for whom the inference was made.
-
-`segmentation_presigned_urls: List[str]`
-
-A list of presigned URLs for accessing the segmentation data related to the inference.
