@@ -327,8 +327,10 @@ inference.
 - `chronological_age_months` ([`PatientBirthDate`](https://dicom.innolitics.com/ciods/cr-image/patient/00100030) at
 [`StudyDate`](https://dicom.innolitics.com/ciods/cr-image/general-study/00080020))
 - [`laterality`](https://dicom.innolitics.com/ciods/video-photographic-image/general-series/00200060): Value can be 'L' (left) or 'R' (right).
+- [`image_position_patient`](https://dicom.innolitics.com/ciods/ct-image/image-plane/00200032)
 - [`patient_sex`](https://dicom.innolitics.com/ciods/arterial-pulse-waveform/patient/00100040): Value can be 'M' (male), 'F' (female), or 'O' (other).
 - [`photometric_interpretation`](https://dicom.innolitics.com/ciods/cr-image/cr-image/00280004): Value can be 'MONOCHROME1' or 'MONOCHROME2'.
+- [`reconstruction_diameter`](https://dicom.innolitics.com/ciods/ct-image/ct-image/00181100)
 - [`rescale_intercept`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281052)
 - [`rescale_slope`](https://dicom.innolitics.com/ciods/digital-x-ray-image/dx-image/00281053)
 - [`slice_thickness`](https://dicom.innolitics.com/ciods/rt-dose/image-plane/00180050)
