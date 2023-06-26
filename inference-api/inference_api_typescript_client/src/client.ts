@@ -57,16 +57,7 @@ export class InferenceAPIClient {
     const resourcePath = InferenceAPIClient.GET_INFERENCE_PATH
       .replace('{model_id}', model_id)
       .replace('{patient_mrn}', patient_mrn);
-
-    try {
-      const response = await this.djangoJwtClient.getJson(resourcePath);
-      return response.data as IInference[];
-    } catch (error) {
-      // Handle error appropriately. You can throw an exception or return a default value.
-      console.error(error);
-      return [];
-    }
+    const response = await this.djangoJwtClient.getJson(resourcePath);
+    return response.data as IInference[];
   }
-
-  // Methods removed for brevity. Implement these based on your actual business logic.
 }
