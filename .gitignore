@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Node.JS modules
+inference-api/inference_api_typescript_client/node_modules/
