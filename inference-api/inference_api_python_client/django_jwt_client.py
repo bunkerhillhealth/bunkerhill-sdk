@@ -44,11 +44,11 @@ class DjangoJWTClient:
     """Constructs a DjangoJWTClient.
 
     Args:
-      username (str): Username for authentication.
-      client_private_key (str): Private key string for authentication.
-      base_url (str): Base URL for the API.
-      auth_path (str): Path to the authentication endpoint for the API.
-      num_failures_allowed (int): Number of failed requests before attempting to refresh the auth JWT. Default 3.
+      username: Username for authentication.
+      client_private_key: Private key string for authentication.
+      base_url: Base URL for the API.
+      auth_path: Path to the authentication endpoint for the API.
+      num_failures_allowed: Number of failed requests before attempting to refresh the auth JWT. Default 3.
     
     Raises:
       InferenceAPIRequestFailedError: If a 400- or 500- response is received from the server.
@@ -66,7 +66,7 @@ class DjangoJWTClient:
     """Queries an endpoint and returns the JSON that the server responds with.
 
     Args:
-      resource_path(str): Path to the endpoint to query.
+      resource_path: Path to the endpoint to query.
       session: A ClientSession in which to send the request.
 
     Returns:
@@ -81,7 +81,7 @@ class DjangoJWTClient:
       return await self._parse_response_json(url, response, action='GET')
 
   async def _parse_response_json(self, url: str, response: aiohttp.ClientResponse, action: str) -> Any:
-    if response.status >= 400:
+    if not response.ok:
       await self._handle_failed_request(url, action, response)
     try:
       response_json = await response.json()
