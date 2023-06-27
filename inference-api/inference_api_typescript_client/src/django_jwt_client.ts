@@ -51,7 +51,7 @@ export default class DjangoJWTClient {
 
   private async handleFailedRequest(e: any, url: string, method: AxiosRequestConfig["method"]) {
     this.numFailures += 1;
-    if (this.numFailures > this.numFailuresAllowed && url != this.djangoBaseUrl + this.authPath) {
+    if (this.numFailures > this.numFailuresAllowed && !this.isAuthRequest(url)) {
       this.accessJwt = null;
       await this.ensureJwtAccess();
     }
@@ -61,6 +61,10 @@ export default class DjangoJWTClient {
       response: e.response,
       error: e.toString()
     });
+  }
+
+  private isAuthRequest(url: string): bool {
+     return url == `${this.djangoBaseUrl}${this.authPath}`
   }
 
   private async ensureJwtAccess() {
@@ -73,9 +77,7 @@ export default class DjangoJWTClient {
         { token: clientJwt },
         { headers: DjangoJWTClient.AUTH_REQUEST_HEADERS }
       );
-      if (response != undefined) {
-        this.accessJwt = response.data.access;
-      }
+      this.accessJwt = response.data.access;
     }
   }
 
@@ -92,13 +94,14 @@ export default class DjangoJWTClient {
         if (result.status >= 400) {
           throw new Error(`Request failed with status code ${result.status}`);
         }
+        this.numFailures = 0;
         return result;
       }, {
         retries: 3,
         minTimeout: 100,
       });
     } catch (e) {
-      this.handleFailedRequest(e, url, method)
+      await this.handleFailedRequest(e, url, method)
     }
   }
 }
