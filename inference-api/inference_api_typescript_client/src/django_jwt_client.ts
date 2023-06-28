@@ -42,8 +42,14 @@ export default class DjangoJWTClient {
   }
 
   private generateClientJwt(): string {
+    const thirtyMinutesFromNow = Math.floor(Date.now() / 1000) + (30 * 60); // Convert milliseconds to seconds and add 30 minutes
+    let jwtClaims = { 
+      iss: 'inference_api_typescript_client',
+      exp: thirtyMinutesFromNow,
+      username: this.username
+    }
     return jwt.sign(
-      { username: this.username },
+      jwtClaims,
       this.clientPrivateKey,
       { algorithm: DjangoJWTClient.CLIENT_JWT_ENCODING_ALGORITHM }
     );
@@ -63,21 +69,20 @@ export default class DjangoJWTClient {
     });
   }
 
-  private isAuthRequest(url: string): bool {
+  private isAuthRequest(url: string): Boolean {
      return url == `${this.djangoBaseUrl}${this.authPath}`
   }
 
   private async ensureJwtAccess() {
     if (!this.accessJwt) {
       const clientJwt = this.generateClientJwt();
-      const authUrl = `${this.djangoBaseUrl}${this.authPath}`;
       const response = await this.makeRequest(
-        authUrl,
+        this.authPath,
         'POST',
-        { token: clientJwt },
+        { jwt: clientJwt },
         { headers: DjangoJWTClient.AUTH_REQUEST_HEADERS }
       );
-      this.accessJwt = response.data.access;
+      this.accessJwt = response.data.token;
     }
   }
 

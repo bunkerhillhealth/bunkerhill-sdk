@@ -13,7 +13,7 @@ export class FailedRequestError extends Error {
       .replace('{method}', args.method?.toString() ?? 'undefined')
       .replace('{url}', args.url)
       .replace('{status_code}', args.response.status.toString())
-      .replace('{error}', args.error)
+      .replace('{error}', args.response.data)
     super(message)
     this.name = 'FailedRequestError'
   }
