@@ -1,3 +1,4 @@
+// Interface definitions used in Inference API Client module.
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export interface IInvalidInferenceAPIClientArgsException {

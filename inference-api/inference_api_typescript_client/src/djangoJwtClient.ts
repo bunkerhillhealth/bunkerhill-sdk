@@ -1,3 +1,4 @@
+// Client for connecting to Bunkerhill's Django server, which serves the Inference API
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import * as jwt from 'jsonwebtoken';
 import { FailedRequestError } from './exceptions'
@@ -28,6 +29,16 @@ export default class DjangoJWTClient {
   private accessJwt: string | null = null;
 
   constructor(params: ClientParams) {
+    /*
+    Constructs a DjangoJWTClient.
+
+    Args:
+      username: Username for authentication.
+      clientPrivateKey: Private key string for authentication.
+      baseUrl: Base URL for the API.
+      authPath: Path to the authentication endpoint for the API.
+      numFailuresAllowed: Number of failed requests before attempting to refresh the auth JWT. Default 3.
+    */
     this.username = params.username;
     this.clientPrivateKey = params.clientPrivateKey;
     this.djangoBaseUrl = params.baseUrl;
@@ -37,6 +48,15 @@ export default class DjangoJWTClient {
   }
 
   async getJson(path: string): Promise<any> {
+    /*
+    Queries an endpoint and returns the JSON that the server responds with.
+
+    Args:
+      path: Path to the endpoint to query.
+
+    Returns:
+      A JSON object parsed from the server's response.
+    */
     await this.ensureJwtAccess();
     return await this.makeRequest(path, 'GET', null, { Authorization: `Bearer ${this.accessJwt}` });    
   }
