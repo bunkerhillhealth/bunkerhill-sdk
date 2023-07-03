@@ -13,7 +13,7 @@ async function main() {
   const patientMrn = '1';
   
   try {
-    const inferences = await client.getInferencesAsync(
+    const inferences = await client.getInferences(
       modelId,
       patientMrn,
     );

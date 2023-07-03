@@ -62,7 +62,7 @@ export class InferenceAPIClient {
   }
 
   public async getInferences(
-    modelID: string,
+    modelId: string,
     patientMrn: string,
   ): Promise<IInference[]> {
     /*
@@ -81,7 +81,7 @@ export class InferenceAPIClient {
       is received from the server.
     */
     const resourcePath = InferenceAPIClient.GET_INFERENCE_PATH
-      .replace('{modelID}', modelId)
+      .replace('{modelId}', modelId)
       .replace('{patientMrn}', patientMrn);
     const response = await this.djangoJwtClient.getJson(resourcePath);
     return response.data as IInference[];
