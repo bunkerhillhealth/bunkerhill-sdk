@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="bunkerhill",
-  version="0.0.1",
+  version="0.0.2",
   author="Bunkerhill Health",
   description="SDK for integration with Bunkerhill Health",
   long_description=long_description,
@@ -21,8 +21,8 @@ setuptools.setup(
     'grpcio==1.51.1',
     'grpcio-testing==1.51.1',
     'grpcio-tools==1.51.1',
-    'nibabel==5.0.0',
     'numpy>=1.24.0',
+    'SimpleITK>=2.2.1',
   ],
 )
 
