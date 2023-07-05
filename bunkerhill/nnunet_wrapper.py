@@ -3,10 +3,10 @@
 import dataclasses
 import os
 
-from typing import Dict
+from typing import Dict, List, Tuple
 
-import nibabel as nib
 import numpy as np
+import SimpleITK as sitk
 
 from bunkerhill.bunkerhill_types import SeriesInstanceUID
 
@@ -72,7 +72,11 @@ def setup_paths(data_dirname: str, task: str) -> NNUNetPaths:
   )
 
 
-def dump_pixel_array(pixel_array: np.ndarray, nnunet_input_dirname: str) -> None:
+def dump_pixel_array(
+  pixel_arrays: List[np.ndarray],
+  pixel_spacings: List[Tuple[float, float, float]],
+  nnunet_input_dirname: str
+) -> None:
   """Converts pixel_array from NumPy ndarray to 3D NifTi file.
 
   nnUNet expects input images to be in 3D NifTi files, while Bunkerhill unpacks DICOM pixel_arrays
@@ -80,14 +84,18 @@ def dump_pixel_array(pixel_array: np.ndarray, nnunet_input_dirname: str) -> None
   https://github.com/MIC-DKFZ/nnUNet/blob/7f1e273fa1021dd2ff00df2ada781ee3133096ef/documentation/dataset_conversion.md
 
   Args:
-    pixel_array: The pixel_array spanning all instances in the same series.
+    pixel_arrays: The pixel_array spanning all instances in the same series.
+    pixel_spacings: The distance between pixels along each of the dimensions (x, y, and z).
     nnunet_input_dirname: The directory path where the 3D NifTi pixel_array will be written.
   """
-  model_argument_filename = os.path.join(
-    nnunet_input_dirname, f'{_TEST_INSTANCE_ID}_{_MODALITY_SUFFIX}.nii.gz'
-  )
-  nifti_pixel_array = nib.Nifti1Image(pixel_array, affine=np.eye(4))
-  nib.save(nifti_pixel_array, model_argument_filename)
+  for i, (pixel_array, pixel_spacing) in enumerate(zip(pixel_arrays, pixel_spacings)):
+    modality_suffix = '%04d' % i
+    model_argument_filename = os.path.join(
+      nnunet_input_dirname, f'{_TEST_INSTANCE_ID}_{modality_suffix}.nii.gz'
+    )
+    sitk_pixel_array = sitk.GetImageFromArray(pixel_array)
+    sitk_pixel_array.SetSpacing(pixel_spacing)
+    sitk.WriteImage(sitk_pixel_array, model_argument_filename)
 
 
 def load_segmentation(outputs_dirname: str, output_attribute_name: str,
@@ -110,8 +118,9 @@ def load_segmentation(outputs_dirname: str, output_attribute_name: str,
           }
       }
   """
-  segmentation_ndarray = nib.load(os.path.join(outputs_dirname,
-                                               f'{_TEST_INSTANCE_ID}.nii.gz')).get_data()
+  img = sitk.ReadImage(os.path.join(outputs_dirname,
+                                    f'{_TEST_INSTANCE_ID}.nii.gz'))
+  segmentation_ndarray = sitk.GetArrayFromImage(img)
   return {output_attribute_name: {series_uid: segmentation_ndarray}}
 
 

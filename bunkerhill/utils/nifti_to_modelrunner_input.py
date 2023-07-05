@@ -11,13 +11,13 @@ Example usage:
 import argparse
 import pickle
 
-import nibabel as nib
+import SimpleITK as sitk
 
 from bunkerhill import shared_file_utils
 
 
 def main(args: argparse.Namespace) -> None:
-  input_array = nib.load(args.nifti_filename).get_data()
+  input_array = sitk.GetArrayFromImage(sitk.ReadImage(args.nifti_filename))
   pixel_array = {'pixel_array': {args.series_uuid: input_array}}
 
   input_filename = shared_file_utils.get_model_arguments_filename(

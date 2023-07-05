@@ -2,10 +2,11 @@
 
 import subprocess
 
-from typing import Dict
+from typing import Dict, Tuple
 
 import numpy as np
 
+from bunkerhill import image_utils
 from bunkerhill import nnunet_wrapper
 from bunkerhill.base_model import BaseModel
 from bunkerhill.bunkerhill_types import Outputs, SeriesInstanceUID
@@ -48,17 +49,35 @@ class MSDHippocampusModel(BaseModel):
     install_pretrained_model_cmd = [self._LOAD_WEIGHTS_COMMAND, self._PRETRAINED_MODEL_FILENAME]
     subprocess.check_call(install_pretrained_model_cmd, timeout=300)
 
-  def inference(self, pixel_array: Dict[SeriesInstanceUID, np.ndarray]) -> Outputs:
+  def inference(
+    self,
+    image_position_patient: Dict[SeriesInstanceUID, Dict[int, Tuple[float, float, float]]],
+    pixel_array: Dict[SeriesInstanceUID, np.ndarray],
+    pixel_spacing: Dict[SeriesInstanceUID, Tuple[float, float]],
+  ) -> Outputs:
     """Runs inference on the pixel array for a DICOM series.
 
     Args:
+      image_position_patient: The x, y, and z coordinates of the upper left hand corner of each
+        instance.
       pixel_array: A dict mapping the DICOM series UID to its pixel array.
+      pixel_spacing: The pair of values specifying physical distance in the patient between the
+        center of each pixel.
 
     Returns:
       A dictionary containing the output segmentation and softmax ndarrays.
     """
+    pixel_spacing_z = image_utils.compute_z_dim_pixel_spacing(
+      next(iter(image_position_patient.values())))
+    pixel_spacing_x, pixel_spacing_y = next(iter(pixel_spacing.values()))
+    first_series_pixel_array = next(iter(pixel_array.values()))
+
     # Convert Bunkerhill pipeline's model arguments into format expected by nnUNet.
-    nnunet_wrapper.dump_pixel_array(next(iter(pixel_array.values())), self._paths.test_data_dirname)
+    nnunet_wrapper.dump_pixel_array(
+      [first_series_pixel_array],
+      [(pixel_spacing_x, pixel_spacing_y, pixel_spacing_z)],
+      self._paths.test_data_dirname
+    )
 
     # Run model inference using nnUNet_predict command line tool. Save the softmax tensor in
     # addition to the segmentation.
