@@ -1,6 +1,5 @@
 """Test for model.py"""
 
-import os
 import pickle
 import uuid
 
@@ -23,7 +22,17 @@ def test_run_inference(tmp_path: Path, grpc_server: Server):
   study_identifier = str(uuid.uuid4())
   pixel_array = np.random.randint(2, 165, (39, 47, 36), dtype=np.uint8)
   series_uid = '1.2.314159.117779'
-  model_arguments = {'pixel_array': {series_uid: pixel_array}}
+
+  model_arguments = {
+    'image_position_patient': {
+      series_uid: {
+        i + 1: (0., 0., float(i))
+        for i in range(36)
+      }
+    },
+    'pixel_array': {series_uid: pixel_array},
+    'pixel_spacing': {series_uid: (1.0, 1.0)},
+  }
   model_arguments_filename = shared_file_utils.get_model_arguments_filename(
     data_dirname, study_identifier)
   with open(model_arguments_filename, 'wb') as f:
@@ -52,5 +61,5 @@ def test_run_inference(tmp_path: Path, grpc_server: Server):
   assert segmentation.dtype == np.uint8
 
   softmax = outputs[MSDHippocampusModel._SOFTMAX_OUTPUT_ATTRIBUTE_NAME][series_uid]
-  assert softmax.shape == (3, 36, 47, 39)
+  assert softmax.shape == (3, 39, 47, 36)
   assert softmax.dtype == np.float16

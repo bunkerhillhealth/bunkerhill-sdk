@@ -35,10 +35,10 @@ class InferenceAPIClient:
     """Constructs an InferenceAPIClient.
 
     Args:
-      username (str): Username for authentication.
-      private_key_filename (str, optional): Path to the private key file for authentication.
-      private_key_string (str, optional): String representation of the private key for authentication.
-      base_url (str, optional): Base URL for the API. Defaults to 'https://api.bunkerhillhealth.com/'.
+      username: Username for authentication.
+      private_key_filename: Path to the private key file for authentication.
+      private_key_string: String representation of the private key for authentication.
+      base_url: Base URL for the API. Defaults to 'https://api.bunkerhillhealth.com/'.
     Raises:
       InvalidInferenceAPIClientArgsException: If invalid arguments are passed to the constructor.
     """
@@ -61,6 +61,7 @@ class InferenceAPIClient:
 
   async def __aexit__(self, exc_type, exc, tb):
     await self._session.close()
+    self._session = None
 
   def _validate_args(
     self,
@@ -84,9 +85,9 @@ class InferenceAPIClient:
     download their segmentations locally.
 
     Args:
-      model_id (str): Model ID for the inferences.
-      patient_mrn (str): Medical record number (MRN) of the patient.
-      segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
+      model_id: Model ID for the inferences.
+      patient_mrn: Medical record number (MRN) of the patient.
+      segmentation_destination_dirname: Directory name where the segmentations will be downloaded.
 
     Returns:
       List of Inferences (each in Dict form, loaded from JSON) fetched from the API.
@@ -113,9 +114,9 @@ class InferenceAPIClient:
     download their segmentations locally.
 
     Args:
-      model_id (str): Model ID for the inferences.
-      patient_mrn (str): Medical record number (MRN) of the patient.
-      segmentation_destination_dirname (str): Directory name where the segmentations will be downloaded.
+      model_id: Model ID for the inferences.
+      patient_mrn: Medical record number (MRN) of the patient.
+      segmentation_destination_dirname: Directory name where the segmentations will be downloaded.
 
     Returns:
       List of Inferences (each in Dict form, loaded from JSON) fetched from the API.
@@ -131,26 +132,3 @@ class InferenceAPIClient:
       patient_mrn=patient_mrn,
       segmentation_destination_dirname=segmentation_destination_dirname,
     )
-
-  async def _download_segmentations(
-    self,
-    presigned_urls: str,
-    destination_dirname: str,
-  ) -> None:
-    for presigned_url in presigned_urls:
-      destination_basename = self._get_destination_basename(presigned_url)
-      destination_filename = os.path.join(destination_dirname, destination_basename)
-      async with self._session.get(presigned_url) as response:
-        if response.status >= 400 or not hasattr(response, 'content'):
-          raise SegmentationDownloadError(presigned_url)
-        content = await response.read()
-      try:
-        with open(destination_filename, 'wb') as f:
-          f.write(content)
-      except:
-        raise FailedToWriteSegmentationError(destination_filename)
-
-  def _get_destination_basename(self, presigned_url: str) -> str:
-    base_url = presigned_url.split('?')[0]
-    output_basename = base_url.split('/')[-1]
-    return output_basename
