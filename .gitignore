@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Node.JS modules
+client_sdk/javascript/node_modules/
