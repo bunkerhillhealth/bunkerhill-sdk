@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "inferenceapi"
+name = "bunkerhill-inference-api"
 version = "0.0.1"
 description = "Python client for Bunkerhill Inference API"
 classifiers = [
