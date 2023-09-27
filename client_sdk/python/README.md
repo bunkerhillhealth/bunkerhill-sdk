@@ -25,7 +25,7 @@ Coming soon
 To install from source, clone the repo locally. Then run the following
 
 ```
-python -m pip install inference-api/python_client/
+python -m pip install client_sdk/python
 ```
 
 ## Credentials
@@ -41,13 +41,13 @@ Once installed, import the library into your Python file and make calls to the A
 For example, to query for all inferences for patient with mrn `$PATIENT_MRN` and model ID `$MODEL_ID`, and download the predections generated for those inferences to `$DIRNAME`, run:
 
 ```
-from inference_api_python_client import InferenceAPIClient
+from bunkerhill_inference_api import InferenceAPIClient
 
 async with InferenceAPIClient(
   username='$USERNAME',
-  private_key_filename='private_key.pem',
+  private_key_filename='/Users/gabealvarez/bunkerhill/bunkerhill/private_key.pem',
 ) as client:
-  inference_list = client.get_inferences(
+  inference_list = await client.get_inferences(
     model_id='$MODEL_ID',
     patient_mrn='$PATIENT_MRN',
     segmentation_destination_dirname='$DIRNAME',
@@ -86,7 +86,7 @@ get_inferences(
 ) -> List[Inference]
 ```
 
-Fetches a list of Inference objects for a given patient and a given model from the Inference API.
+Asynchronously fetches a list of Inference objects for a given patient and a given model from the Inference API.
 
 ##### Parameters:
 model_id (str): The model ID to fetch inferences for. \
@@ -97,18 +97,5 @@ segmentation_destination_dirname (str): The directory where the downloaded segme
 List[Inference]: A list of JSON Dicts, one for each Inference.
 
 _Notes:_
-
-- As a side effect, this method downloads the segmentations corresponding to the fetched inferences to `segmentation_destination_dirname`.
 - You must have authorization to the specified `model_id` - if not, a 403 error will be raised.
 - Only inferences corresponding to institutions that you are authorized to will be returned.
-
-#### get_inferences_async
-
-```
-get_inferences_async(
-  model_id: str,
-  patient_mrn: str,
-  segmentation_destination_dirname: str,
- ) -> List[Inference]
-```
-Asynchronous version of `get_inferences`. The `get_inferences_async` method should be used when running the client in an environment that supports asynchronous tasks, especially when handling larger data sets.
