@@ -12,7 +12,6 @@ async def main():
         inference_list = await client.get_inferences(
             model_id="e7ad8122-14cf-4bb2-b57f-075a07b51e2b",
             patient_mrn="1",
-            segmentation_destination_dirname=".",
         )
         print(inference_list)
 
