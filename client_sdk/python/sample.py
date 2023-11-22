@@ -6,7 +6,7 @@ from bunkerhill_inference_api import InferenceAPIClient
 async def main():
     async with InferenceAPIClient(
         username="datashare-admin",
-        private_key_filename="/Users/gabealvarez/bunkerhill/bunkerhill/private_key.pem",
+        private_key_filename="private_key.pem",
         base_url="https://api.coppshillhealth.com/",
     ) as client:
         inference_list = await client.get_inferences(
