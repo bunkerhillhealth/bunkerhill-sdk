@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "setuptools_scm"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -14,15 +14,15 @@ authors = [
   {name = "Bunkerhill Health", email = "engineering@bunkerhillhealth.com"},
 ]
 readme = "README.md"
-python_requires = ">=3.9"
+requires-python = ">=3.9"
 
-[project.dependencies]
-aiohttp = ">=3.7.2"
-asgiref = ">=3.6.0"
-PyJWT = ">=2.7.0"
-pytz = ">=2021.3"
-retry = ">=0.9.2"
+dependencies = [
+  "aiohttp>=3.7.2",
+  "asgiref>=3.6.0",
+  "PyJWT>=2.7.0",
+  "pytz>=2021.3",
+  "retry>=0.9.2"
+]
 
 [project.urls]
-"Homepage" = "https://github.com/bunkerhillhealth/bunkerhill-sdk/inference-api/python-client"
-
+"Homepage" = "https://github.com/bunkerhillhealth/bunkerhill-sdk/client_sdk/python"
