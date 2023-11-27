@@ -80,7 +80,6 @@ class InferenceAPIClient:
         self,
         model_id: str,
         patient_mrn: str,
-        segmentation_destination_dirname: str,
     ) -> List[Inference]:
         """Asynchronous function to fetch inferences from the API matching the model_id and patient_mrn, and
         download their segmentations locally.
@@ -88,7 +87,6 @@ class InferenceAPIClient:
         Args:
           model_id: Model ID for the inferences.
           patient_mrn: Medical record number (MRN) of the patient.
-          segmentation_destination_dirname: Directory name where the segmentations will be downloaded.
 
         Returns:
           List of Inferences (each in Dict form, loaded from JSON) fetched from the API.
@@ -96,8 +94,6 @@ class InferenceAPIClient:
         Raises:
           InferenceAPIRequestFailedError: If a 400- or 500- response is received from the server.
           JSONResponseParseError: If a 200- response is received from the server, but it contains invalid JSON.
-          SegmentationDownloadError: If one or more segmentations at the URLs returned by the server fail to download.
-          FailedToWriteSegmentationError: If segmentation_destination_dirname is invalid or lacks write permissions.
         """
         resource_path = self.GET_INFERENCE_PATH.format(
             model_id=model_id,

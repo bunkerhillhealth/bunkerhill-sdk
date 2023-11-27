@@ -38,7 +38,7 @@ The credentials are exchanged with the server for a JWT access token, which is m
 
 Once installed, import the library into your Python file and make calls to the API using the `InferenceAPIClient`. 
 
-For example, to query for all inferences for patient with mrn `$PATIENT_MRN` and model ID `$MODEL_ID`, and download the predections generated for those inferences to `$DIRNAME`, run:
+For example, to query for all inferences for patient with mrn `$PATIENT_MRN` and model ID `$MODEL_ID`, run:
 
 ```
 from bunkerhill_inference_api import InferenceAPIClient
@@ -50,7 +50,6 @@ async with InferenceAPIClient(
   inference_list = await client.get_inferences(
     model_id='$MODEL_ID',
     patient_mrn='$PATIENT_MRN',
-    segmentation_destination_dirname='$DIRNAME',
   )
 ```
 
@@ -82,7 +81,6 @@ _Note:_ At least one of private_key_filename or private_key_string must be provi
 get_inferences(
   model_id: str,
   patient_mrn: str,
-  segmentation_destination_dirname: str,
 ) -> List[Inference]
 ```
 
@@ -91,7 +89,6 @@ Asynchronously fetches a list of Inference objects for a given patient and a giv
 ##### Parameters:
 model_id (str): The model ID to fetch inferences for. \
 patient_mrn (str): The medical record number (MRN) of the patient. \
-segmentation_destination_dirname (str): The directory where the downloaded segmentation data will be stored.
 
 ##### Returns:
 List[Inference]: A list of JSON Dicts, one for each Inference.
